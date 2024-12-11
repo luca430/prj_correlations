@@ -6,15 +6,15 @@ import runge_kutta as rk
 np.random.seed(1234)
 
 # Parameters
-folder_name = "time_series"
-graphs_folder = os.path.join('..', 'graphs2')
+folder_name = "kuramoto/data/time_series"
+graphs_folder = "./graphs"
 T = 10
 dt = 0.005
 
 # Create the output folder if it doesn't exist
 os.makedirs(folder_name, exist_ok=True)
 
-# Define the kuramoto function
+# Define the kuramoto function (normalized with respect to the mean degree)
 def kuramoto(x, t, w, k, A):
     
     phase_diff = x[:, np.newaxis] - x

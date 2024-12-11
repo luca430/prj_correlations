@@ -1,3 +1,5 @@
+"Script to generate the eigenvalue distribution. We want a smooth curve for the pdf so we use the Gausian Kernel method instead of a histogram."
+
 import os
 import numpy as np
 import pandas as pd
@@ -44,8 +46,8 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-corr_path = "corr_matrix" #set folder where correlation matrices are found
-output_path = "distributions" #set folder where time series are found
+corr_path = "white_noise/data/corr_matrix" #set folder where correlation matrices are found
+output_path = "white_noise/data/distributions" #set folder where time series are found
 os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
 
 file_list_100 = []
@@ -53,6 +55,7 @@ file_list_200 = []
 file_list_500 = []
 file_list_1000 = []
 
+print("Extracting files...")
 for file_name in os.listdir(corr_path):
     # Extract n and i from the file name
     base_name = os.path.splitext(file_name)[0]  # remove .gml extension
@@ -64,7 +67,7 @@ for file_name in os.listdir(corr_path):
     elif n == 500: file_list_500.append(file_name)
     elif n == 1000: file_list_1000.append(file_name)
 
-zi, zf, dz = 0, 3, 0.01
+zi, zf, dz = 0, 3, 0.01 # we chose `zf=3` because we know that the max eigenvalue possible for us is smaller then 3
 z_range = np.arange(zi, zf, dz)
 pdf_100 = np.zeros(int((zf - zi)/0.01))
 pdf_200 = np.zeros(int((zf - zi)/0.01))

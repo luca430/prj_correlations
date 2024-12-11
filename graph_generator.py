@@ -1,3 +1,5 @@
+"Script to generate many random graphs and store them in the `graphs` folder."
+
 import os
 import numpy as np
 import networkx as nx
