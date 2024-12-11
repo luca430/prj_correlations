@@ -1,3 +1,5 @@
+# Script to generate the correlation matrices for kuramoto time series and store them in './kuramoto/data/corr_matrix'.
+
 import os
 import numpy as np
 np.random.seed(1234)
@@ -13,12 +15,11 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-folder_name = "time_series"
-folder_2 = "corr_matrix"
-folder_3 = "eigenvalue_distr"
+folder_name = "./kuramoto/data/time_series"
+folder_2 = "./kuramoto/data/corr_matrix"
+
 # Create the output folders if it doesn't exist
 os.makedirs(folder_2, exist_ok=True)
-os.makedirs(folder_3, exist_ok=True)
 
 for file_name in os.listdir(folder_name):
     if file_name.startswith("kuramoto"):
@@ -31,8 +32,5 @@ for file_name in os.listdir(folder_name):
         # Save the correlations
         file_path_out = os.path.join(folder_2,file_name)
         np.savetxt(file_path_out, correlation_matrix, delimiter=",")
-        # Save the eigenvalues
-        file_path_out = os.path.join(folder_3,file_name)
-        np.savetxt(file_path_out, eigenvalues, delimiter=",")
 
         print("{} ...done!".format(file_name))

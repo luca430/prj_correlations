@@ -1,4 +1,4 @@
-"script to generate white noise time series and store them in folder `white_noise/data/time/series`."
+# Script to generate white noise time series and store them in folder `./white_noise/data/time/series`.
 
 import os
 import time
@@ -8,8 +8,8 @@ np.random.seed(1234)
 # Define the parameters
 T = 10
 dt = 0.005
-folder_name = "white_noise/data/time_series"
-graphs_folder = "graphs"
+folder_name = "./white_noise/data/time_series"
+graphs_folder = "./graphs"
 
 # Create the output folder if it doesn't exist
 os.makedirs(folder_name, exist_ok=True)

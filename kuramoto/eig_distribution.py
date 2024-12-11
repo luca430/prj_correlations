@@ -1,3 +1,6 @@
+# Script to generate the eigenvalue distribution. We want a smooth curve for the pdf 
+# so we use the Gaussian Kernel method instead of a histogram.
+
 import os
 import numpy as np
 import pandas as pd
@@ -71,8 +74,8 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-corr_path = "corr_matrix" #set folder where correlation matrices are found
-output_path = "distributions" #set folder where time series are found
+corr_path = "./kuramoto/data/corr_matrix" #set folder where correlation matrices are found
+output_path = "./kuramoto/data/distributions" #set folder where time series are found
 os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
 
 file_list_10_100 = []

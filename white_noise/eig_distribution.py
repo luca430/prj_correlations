@@ -1,4 +1,5 @@
-"Script to generate the eigenvalue distribution. We want a smooth curve for the pdf so we use the Gausian Kernel method instead of a histogram."
+# Script to generate the eigenvalue distribution. We want a smooth curve for the pdf 
+# so we use the Gaussian Kernel method instead of a histogram.
 
 import os
 import numpy as np
@@ -46,8 +47,8 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-corr_path = "white_noise/data/corr_matrix" #set folder where correlation matrices are found
-output_path = "white_noise/data/distributions" #set folder where time series are found
+corr_path = "./white_noise/data/corr_matrix" #set folder where correlation matrices are found
+output_path = "./white_noise/data/distributions" #set folder where time series are found
 os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
 
 file_list_100 = []

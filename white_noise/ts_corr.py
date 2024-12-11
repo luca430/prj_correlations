@@ -1,4 +1,4 @@
-"Script to create the correlation matrices for white noise and store them in folder `white_noise/data/corr_matrix`."
+# Script to create the correlation matrices for white noise and store them in folder `./white_noise/data/corr_matrix`.
 
 import os
 import numpy as np
@@ -15,8 +15,8 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-source_folder = "white_noise/data/time_series"
-target_folder = "white_noise/data/corr_matrix"
+source_folder = "./white_noise/data/time_series"
+target_folder = "./white_noise/data/corr_matrix"
 # Create the output folders if it doesn't exist
 os.makedirs(target_folder, exist_ok=True)
 

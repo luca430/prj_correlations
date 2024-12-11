@@ -1,3 +1,6 @@
+# Script to generate Kuramoto time series on netwroks contained in './graphs' and store 
+# them in 'kuramoto/data/time_series'.
+
 import os
 import time
 import numpy as np
@@ -6,7 +9,7 @@ import runge_kutta as rk
 np.random.seed(1234)
 
 # Parameters
-folder_name = "kuramoto/data/time_series"
+folder_name = "./kuramoto/data/time_series"
 graphs_folder = "./graphs"
 T = 10
 dt = 0.005
@@ -46,7 +49,7 @@ for file_name in os.listdir(graphs_folder):
 
         # Run the Runge-Kutta for different coupling regimes
         for k in K:
-            print("kuramoto_k{}_{}_{}.csv ...".format(int(k/K_c*10), n, i), end="\r")
+            print("kuramoto_k{}_{}_{}.csv ...".format(int(k/K_c), n, i), end="\r")
             ti = time.time()
             t_vals, x_vals = rk.runge_kutta(kuramoto, x0, T, dt = dt, w = w, k = k, A = A)
 
