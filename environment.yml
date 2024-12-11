@@ -10,3 +10,5 @@ dependencies:
   - pandas
   - python=3.11
   - scipy
+  - anaconda::networkx
+  - anaconda::scikit-learn
