@@ -12,3 +12,4 @@ dependencies:
   - scipy
   - anaconda::networkx
   - anaconda::scikit-learn
+  - graph-tool
