@@ -52,7 +52,7 @@ for file_name in os.listdir(graphs_folder):
         mu, sig = 0, 20
         w = np.random.normal(mu, sig, size=n)
         K_c = 30    # rescaling factor
-        K = [K_c, 1.5*K_c, 2.5*K_c, 5*K_c]
+        K = [0.0, K_c, 1.5*K_c, 2.5*K_c, 5*K_c]
 
         # Run the Runge-Kutta for different coupling regimes
         

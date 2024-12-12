@@ -16,7 +16,7 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-for k in [1.0, 1.5, 2.5, 5.0]:
+for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
     source_folder = "./kuramoto/data/time_series/K_{}".format(k)
     out_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
 

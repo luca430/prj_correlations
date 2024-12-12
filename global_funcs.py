@@ -3,34 +3,37 @@
 import os
 import numpy as np
 import graph_tool.all as gt
+from scipy.sparse import load_npz
 from scipy.stats import linregress
 
 def build_dict():
     N_dict = {}
-    for i in range(25):
-        N_dict[f"{i+1}"] = {}
-        for k in [0,10,15,25,50]:
-            N_dict[f"{i+1}"][f"k{k}"] = {}
-            N_dict[f"{i+1}"][f"k{k}"]["Fisher"] = {}
-            N_dict[f"{i+1}"][f"k{k}"]["FisherRMT"] = {}
-            N_dict[f"{i+1}"][f"k{k}"]["Naive"] = {}
-            N_dict[f"{i+1}"][f"k{k}"]["NaiveRMT"] = {}
+    for N in [100, 200, 500, 1000]:
+        N_dict[f"N_{N}"] = {}
+        for i in range(1,26):
+            N_dict[f"N_{N}"][i] = {}
+            N_dict[f"N_{N}"][i]["Fisher"] = {}
+            N_dict[f"N_{N}"][i]["FisherRMT"] = {}
+            N_dict[f"N_{N}"][i]["Naive"] = {}
+            N_dict[f"N_{N}"][i]["NaiveRMT"] = {}
             for tau in ["tau1.0", "tau1.5", "tau2.0", "tau2.5"]:
-                N_dict[f"{i+1}"][f"k{k}"]["Fisher"][tau] = {}
-                N_dict[f"{i+1}"][f"k{k}"]["FisherRMT"][tau] = {}
+                N_dict[f"N_{N}"][i]["Fisher"][tau] = {}
+                N_dict[f"N_{N}"][i]["FisherRMT"][tau] = {}
             for p in ["p0.1", "p0.15", "p0.2", "p0.25"]:
-                N_dict[f"{i+1}"][f"k{k}"]["Naive"][p] = {}
-                N_dict[f"{i+1}"][f"k{k}"]["NaiveRMT"][p] = {}
+                N_dict[f"N_{N}"][i]["Naive"][p] = {}
+                N_dict[f"N_{N}"][i]["NaiveRMT"][p] = {}
 
     return N_dict
 
-def extract_file_information(subdir, file):
-    base_name = os.path.splitext(file)[0]
-    _, k_str, n_str, i_str = base_name.split('_')
-    thresh = subdir.split('/')[-1]
-    method = subdir.split('/')[-2]
+def extract_file_information(file_path):
+    base_name = os.path.splitext(file_path)[0]
+    split_base_name = base_name.split('/')
+    name = split_base_name[-1]
+    _, n_str, i_str = name.split('_')
+    thresh = split_base_name[-2]
+    method = split_base_name[-3]
     
-    return(i_str, k_str, method, thresh)
+    return(i_str, n_str, method, thresh)
 
 def explore_dict(global_dict, keys):
     # Function to easily access global variables.
@@ -63,7 +66,7 @@ def explore_dict(global_dict, keys):
 
 def mat2edgelist(csv_matrix):
     # function to convert a matrix saved in csv format into an edge list
-    A = np.loadtxt(csv_matrix,delimiter=",")
+    A = load_npz(csv_matrix).toarray()
     for i in range(len(A)):
         A[i,i] = 0
     edge_list = []
@@ -121,14 +124,11 @@ def avg_shortest_path(g):
 
 def compute_global_variables(obj, glob_dict, load=False):
 
-    # if not load:
-    #     g = gt.Graph()
-    #     g.add_edge_list(obj)
-    # else:
-    #     g = gt.load_graph(obj, fmt='gml')
-
-    g = gt.Graph()
-    g.add_edge_list(obj)
+    if not load:
+        g = gt.Graph()
+        g.add_edge_list(obj)
+    else:
+        g = gt.load_graph(obj, fmt='gml')
     
     #Mean degree
     degree_sequence = g.get_out_degrees(g.get_vertices())
@@ -151,13 +151,13 @@ def compute_global_variables(obj, glob_dict, load=False):
     glob_dict['Global_clustering'] = clust
 
     #Assortativity
-    assort = gt.assortativity(g,"in")
+    assort = gt.assortativity(g, "in")
     glob_dict['Assortativity'] = assort
 
     #Modularity via minimum description length
     mdl_state = gt.minimize_blockmodel_dl(g)
     b = mdl_state.get_blocks()
-    mod = gt.modularity(g,b)
+    mod = gt.modularity(g, b)
     glob_dict['Modularity'] = mod
 
     #Avg. path length

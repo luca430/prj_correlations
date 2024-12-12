@@ -12,7 +12,7 @@ corr_path = "./kuramoto/data/corr_matrices"
 filtered_path = "./kuramoto/data/filtered_corr"
 os.makedirs(filtered_path, exist_ok=True) # Create the output folder if it doesn't exist
 
-for k in [1.0, 1.5, 2.5, 5.0]:
+for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
     print("Filtering k={}...".format(k), end="\r")
     input_path = os.path.join(corr_path,"K_{}".format(k))
     output_path = os.path.join(filtered_path,"K_{}".format(k))

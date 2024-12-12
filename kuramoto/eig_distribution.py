@@ -84,7 +84,7 @@ zi, zf, dz = 0, 200, 0.01
 z_range = np.arange(zi, zf, dz)
 
 print("Extracting files...")
-for k in [1.0, 1.5, 2.5, 5.0]:
+for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
 
     print('Interpolating k = {}...'.format(k))
     file_list_100 = []
