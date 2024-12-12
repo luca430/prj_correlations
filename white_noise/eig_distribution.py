@@ -2,6 +2,7 @@
 # so we use the Gaussian Kernel method instead of a histogram.
 
 import os
+import gzip
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
@@ -47,8 +48,8 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-corr_path = "./white_noise/data/corr_matrix" #set folder where correlation matrices are found
-output_path = "./white_noise/data/distributions" #set folder where time series are found
+corr_path = "./white_noise/data/corr_matrices"
+output_path = "./white_noise/data/distributions"
 os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
 
 file_list_100 = []
@@ -59,7 +60,7 @@ file_list_1000 = []
 print("Extracting files...")
 for file_name in os.listdir(corr_path):
     # Extract n and i from the file name
-    base_name = os.path.splitext(file_name)[0]  # remove .gml extension
+    base_name = os.path.splitext(file_name)[0][:-4]  # remove .csv.gz extension
     _, n_str, i_str = base_name.split('_')
     n = int(n_str)
     i = int(i_str)
@@ -77,7 +78,8 @@ pdf_1000 = np.zeros(int((zf - zi)/0.01))
 
 print('Interpolating n = 100...')
 for file in file_list_100:
-    x = np.loadtxt(os.path.join(corr_path,file), delimiter=",")
+    with gzip.open(os.path.join(corr_path,file), "rt") as f:
+            x = np.loadtxt(f, delimiter=",")
     eVal, eVec = getPCA(x)
     pdf = fitKDE(eVal, bWidth=0.01)
     pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
@@ -88,7 +90,8 @@ pdf_100_emp.to_csv(os.path.join(output_path,'pdf_100.csv'), header=True)
     
 print('Interpolating n = 200...')
 for file in file_list_200:
-    x = np.loadtxt(os.path.join(corr_path,file), delimiter=",")
+    with gzip.open(os.path.join(corr_path,file), "rt") as f:
+            x = np.loadtxt(f, delimiter=",")
     eVal, eVec = getPCA(x)
     pdf = fitKDE(eVal, bWidth=0.01)
     pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
@@ -99,7 +102,8 @@ pdf_200_emp.to_csv(os.path.join(output_path,'pdf_200.csv'), header=True)
     
 print('Interpolating n = 500...')
 for file in file_list_500:
-    x = np.loadtxt(os.path.join(corr_path,file), delimiter=",")
+    with gzip.open(os.path.join(corr_path,file), "rt") as f:
+            x = np.loadtxt(f, delimiter=",")
     eVal, eVec = getPCA(x)
     pdf = fitKDE(eVal, bWidth=0.01)
     pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
@@ -110,7 +114,8 @@ pdf_500_emp.to_csv(os.path.join(output_path,'pdf_500.csv'), header=True)
     
 print('Interpolating n = 1000...')
 for file in file_list_1000:
-    x = np.loadtxt(os.path.join(corr_path,file), delimiter=",")
+    with gzip.open(os.path.join(corr_path,file), "rt") as f:
+            x = np.loadtxt(f, delimiter=",")
     eVal, eVec = getPCA(x)
     pdf = fitKDE(eVal, bWidth=0.01)
     pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)

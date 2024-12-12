@@ -13,3 +13,5 @@ dependencies:
   - anaconda::networkx
   - anaconda::scikit-learn
   - graph-tool
+  - anaconda::seaborn
+  - umap-learn

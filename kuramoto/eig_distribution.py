@@ -2,6 +2,7 @@
 # so we use the Gaussian Kernel method instead of a histogram.
 
 import os
+import gzip
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
@@ -74,267 +75,95 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-corr_path = "./kuramoto/data/corr_matrix" #set folder where correlation matrices are found
-output_path = "./kuramoto/data/distributions" #set folder where time series are found
+input_path = "./kuramoto/data/corr_matrices"
+output_path = "./kuramoto/data/distributions"
 os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
 
-file_list_10_100 = []
-file_list_15_100 = []
-file_list_25_100 = []
-file_list_50_100 = []
-
-file_list_10_200 = []
-file_list_15_200 = []
-file_list_25_200 = []
-file_list_50_200 = []
-
-file_list_10_500 = []
-file_list_15_500 = []
-file_list_25_500 = []
-file_list_50_500 = []
-
-file_list_10_1000 = []
-file_list_15_1000 = []
-file_list_25_1000 = []
-file_list_50_1000 = []
-
-for file_name in os.listdir(corr_path):
-    # Extract n and i from the file name
-    base_name = os.path.splitext(file_name)[0]  # remove .gml extension
-    _, k_str, n_str, i_str = base_name.split('_')
-    k = int(k_str[1:])
-    n = int(n_str)
-    i = int(i_str)
-
-    if n == 100:
-        if k == 10: file_list_10_100.append(file_name)
-        elif k == 15: file_list_15_100.append(file_name)
-        elif k == 25: file_list_25_100.append(file_name)
-        elif k == 50: file_list_50_100.append(file_name)
-
-    if n == 200:
-        if k == 10: file_list_10_200.append(file_name)
-        elif k == 15: file_list_15_200.append(file_name)
-        elif k == 25: file_list_25_200.append(file_name)
-        elif k == 50: file_list_50_200.append(file_name)
-
-    if n == 500:
-        if k == 10: file_list_10_500.append(file_name)
-        elif k == 15: file_list_15_500.append(file_name)
-        elif k == 25: file_list_25_500.append(file_name)
-        elif k == 50: file_list_50_500.append(file_name)
-
-    if n == 1000:
-        if k == 10: file_list_10_1000.append(file_name)
-        elif k == 15: file_list_15_1000.append(file_name)
-        elif k == 25: file_list_25_1000.append(file_name)
-        elif k == 50: file_list_50_1000.append(file_name)
-
+# distributions domain
 zi, zf, dz = 0, 200, 0.01
 z_range = np.arange(zi, zf, dz)
 
-pdf_10_100 = np.zeros(int((zf - zi)/0.01))
-pdf_15_100 = np.zeros(int((zf - zi)/0.01))
-pdf_25_100 = np.zeros(int((zf - zi)/0.01))
-pdf_50_100 = np.zeros(int((zf - zi)/0.01))
+print("Extracting files...")
+for k in [1.0, 1.5, 2.5, 5.0]:
 
-pdf_10_200 = np.zeros(int((zf - zi)/0.01))
-pdf_15_200 = np.zeros(int((zf - zi)/0.01))
-pdf_25_200 = np.zeros(int((zf - zi)/0.01))
-pdf_50_200 = np.zeros(int((zf - zi)/0.01))
+    print('Interpolating k = {}...'.format(k))
+    file_list_100 = []
+    file_list_200 = []
+    file_list_500 = []
+    file_list_1000 = []
 
-pdf_10_500 = np.zeros(int((zf - zi)/0.01))
-pdf_15_500 = np.zeros(int((zf - zi)/0.01))
-pdf_25_500 = np.zeros(int((zf - zi)/0.01))
-pdf_50_500 = np.zeros(int((zf - zi)/0.01))
+    corr_path = os.path.join(input_path,"K_{}".format(k))
+    for file_name in os.listdir(corr_path):
+        # Extract n and i from the file name
+        base_name = os.path.splitext(file_name)[0][:-4]  # remove .csv.gz extension
+        _, n_str, i_str = base_name.split('_')
+        n = int(n_str)
+        i = int(i_str)
 
-pdf_10_1000 = np.zeros(int((zf - zi)/0.01))
-pdf_15_1000 = np.zeros(int((zf - zi)/0.01))
-pdf_25_1000 = np.zeros(int((zf - zi)/0.01))
-pdf_50_1000 = np.zeros(int((zf - zi)/0.01))
+        if n == 100: file_list_100.append(file_name)
+        elif n == 200: file_list_200.append(file_name)
+        elif n == 500: file_list_500.append(file_name)
+        elif n == 1000: file_list_1000.append(file_name)
 
-###### n = 100 ######
-print('Interpolating n = 100...')
-print('\tInterpolating k = 10...')
-for file in file_list_10_100:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_10_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_10_100)
+    pdf_100 = np.zeros(int((zf - zi)/0.01))
+    pdf_200 = np.zeros(int((zf - zi)/0.01))
+    pdf_500 = np.zeros(int((zf - zi)/0.01))
+    pdf_1000 = np.zeros(int((zf - zi)/0.01))
 
-pdf_10_100_emp = pd.Series(pdf_10_100, index=z_range)
-pdf_10_100_emp.to_csv(os.path.join(output_path,'pdf_10_100.csv'), header=True)
+    ###### n = 100 ######
+    print('\tInterpolating n = 100...')
+    for file in file_list_100:
+        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+                x = np.loadtxt(f, delimiter=",")
+        eVal, eVec = getPCA(x)
+        pdf = fitKDE(eVal, bWidth=0.01, fill=True)
+        pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
+        pdf_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_100)
 
-print('\tInterpolating k = 15...')
-for file in file_list_15_100:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_15_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_15_100)
+    pdf_100_emp = pd.Series(pdf_100, index=z_range)
+    distr_path = os.path.join(output_path,"K_{}".format(k))
+    pdf_100_emp.to_csv(os.path.join(output_path,'pdf_100.csv'), header=True)
 
-pdf_15_100_emp = pd.Series(pdf_15_100, index=z_range)
-pdf_15_100_emp.to_csv(os.path.join(output_path,'pdf_15_100.csv'), header=True)
+    ###### n = 200 ######
+    print('\tInterpolating n = 200...')
+    for file in file_list_200:
+        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+                x = np.loadtxt(f, delimiter=",")
+        eVal, eVec = getPCA(x)
+        pdf = fitKDE(eVal, bWidth=0.01, fill=True)
+        pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
+        pdf_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_200)
 
-print('\tInterpolating k = 25...')
-for file in file_list_25_100:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_25_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_25_100)
+    pdf_200_emp = pd.Series(pdf_200, index=z_range)
+    distr_path = os.path.join(output_path,"K_{}".format(k))
+    pdf_200_emp.to_csv(os.path.join(output_path,'pdf_200.csv'), header=True)
 
-pdf_25_100_emp = pd.Series(pdf_25_100, index=z_range)
-pdf_25_100_emp.to_csv(os.path.join(output_path,'pdf_25_100.csv'), header=True)
+    ###### n = 500 ######
+    print('\tInterpolating n = 500...')
+    for file in file_list_500:
+        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+                x = np.loadtxt(f, delimiter=",")
+        eVal, eVec = getPCA(x)
+        pdf = fitKDE(eVal, bWidth=0.01, fill=True)
+        pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
+        pdf_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_500)
 
-print('\tInterpolating k = 50...')
-for file in file_list_50_100:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_50_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_50_100)
+    pdf_500_emp = pd.Series(pdf_500, index=z_range)
+    distr_path = os.path.join(output_path,"K_{}".format(k))
+    pdf_500_emp.to_csv(os.path.join(output_path,'pdf_500.csv'), header=True)
 
-pdf_50_100_emp = pd.Series(pdf_50_100, index=z_range)
-pdf_50_100_emp.to_csv(os.path.join(output_path,'pdf_50_100.csv'), header=True)
+    ###### n = 1000 ######
+    print('\tInterpolating n = 1000...')
+    for file in file_list_1000:
+        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+                x = np.loadtxt(f, delimiter=",")
+        eVal, eVec = getPCA(x)
+        pdf = fitKDE(eVal, bWidth=0.01, fill=True)
+        pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
+        pdf_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_1000)
 
-###### n = 200 ######
-print('Interpolating n = 200...')
-print('\tInterpolating k = 10...')
-for file in file_list_10_200:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_10_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_10_200)
+    pdf_1000_emp = pd.Series(pdf_1000, index=z_range)
+    distr_path = os.path.join(output_path,"K_{}".format(k))
+    pdf_1000_emp.to_csv(os.path.join(output_path,'pdf_1000.csv'), header=True)
 
-pdf_10_200_emp = pd.Series(pdf_10_100, index=z_range)
-pdf_10_200_emp.to_csv(os.path.join(output_path,'pdf_10_200.csv'), header=True)
-
-print('\tInterpolating k = 15...')
-for file in file_list_15_200:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_15_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_15_200)
-
-pdf_15_200_emp = pd.Series(pdf_15_100, index=z_range)
-pdf_15_200_emp.to_csv(os.path.join(output_path,'pdf_15_200.csv'), header=True)
-
-print('\tInterpolating k = 25...')
-for file in file_list_25_200:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_25_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_25_200)
-
-pdf_25_200_emp = pd.Series(pdf_25_200, index=z_range)
-pdf_25_200_emp.to_csv(os.path.join(output_path,'pdf_25_200.csv'), header=True)
-
-print('\tInterpolating k = 50...')
-for file in file_list_50_200:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_50_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_50_200)
-
-pdf_50_200_emp = pd.Series(pdf_50_200, index=z_range)
-pdf_50_200_emp.to_csv(os.path.join(output_path,'pdf_50_200.csv'), header=True)
-
-###### n = 500 ######
-print('Interpolating n = 500...')
-print('\tInterpolating k = 10...')
-for file in file_list_10_500:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_10_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_10_500)
-
-pdf_10_500_emp = pd.Series(pdf_10_500, index=z_range)
-pdf_10_500_emp.to_csv(os.path.join(output_path,'pdf_10_500.csv'), header=True)
-
-print('\tInterpolating k = 15...')
-for file in file_list_15_500:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_15_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_15_500)
-
-pdf_15_500_emp = pd.Series(pdf_15_500, index=z_range)
-pdf_15_500_emp.to_csv(os.path.join(output_path,'pdf_15_500.csv'), header=True)
-
-print('\tInterpolating k = 25...')
-for file in file_list_25_500:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_25_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_25_500)
-
-pdf_25_500_emp = pd.Series(pdf_25_100, index=z_range)
-pdf_25_500_emp.to_csv(os.path.join(output_path,'pdf_25_500.csv'), header=True)
-
-print('\tInterpolating k = 50...')
-for file in file_list_50_500:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_50_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_50_500)
-
-pdf_50_500_emp = pd.Series(pdf_50_500, index=z_range)
-pdf_50_500_emp.to_csv(os.path.join(output_path,'pdf_50_500.csv'), header=True)
-
-###### n = 1000 ######
-print('Interpolating n = 1000...')
-print('\tInterpolating k = 10...')
-for file in file_list_10_1000:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_10_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_10_1000)
-
-pdf_10_1000_emp = pd.Series(pdf_10_1000, index=z_range)
-pdf_10_1000_emp.to_csv(os.path.join(output_path,'pdf_10_1000.csv'), header=True)
-
-print('\tInterpolating k = 15...')
-for file in file_list_15_1000:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_15_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_15_1000)
-
-pdf_15_1000_emp = pd.Series(pdf_15_100, index=z_range)
-pdf_15_1000_emp.to_csv(os.path.join(output_path,'pdf_15_1000.csv'), header=True)
-
-print('\tInterpolating k = 25...')
-for file in file_list_25_1000:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_25_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_25_1000)
-
-pdf_25_1000_emp = pd.Series(pdf_25_1000, index=z_range)
-pdf_25_1000_emp.to_csv(os.path.join(output_path,'pdf_25_1000.csv'), header=True)
-
-print('\tInterpolating k = 50...')
-for file in file_list_50_1000:
-    x = np.loadtxt(os.path.join(corr_path, file), delimiter=",")
-    eVal, eVec = getPCA(x)
-    pdf = fitKDE(eVal, bWidth=0.01, fill=True)
-    pdf_func = interp1d(pdf.index, pdf.values, kind='cubic', fill_value=0, bounds_error=False)
-    pdf_50_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_50_1000)
-
-pdf_50_1000_emp = pd.Series(pdf_50_1000, index=z_range)
-pdf_50_1000_emp.to_csv(os.path.join(output_path,'pdf_50_1000.csv'), header=True)
-
-print('Done!')
+print("Done!")

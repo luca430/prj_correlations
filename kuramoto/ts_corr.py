@@ -1,6 +1,7 @@
 # Script to generate the correlation matrices for kuramoto time series and store them in './kuramoto/data/corr_matrix'.
 
 import os
+import gzip
 import numpy as np
 np.random.seed(1234)
 
@@ -15,22 +16,26 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-folder_name = "./kuramoto/data/time_series"
-folder_2 = "./kuramoto/data/corr_matrix"
+for k in [1.0, 1.5, 2.5, 5.0]:
+    source_folder = "./kuramoto/data/time_series/K_{}".format(k)
+    out_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
 
-# Create the output folders if it doesn't exist
-os.makedirs(folder_2, exist_ok=True)
+    # Create the output folders if it doesn't exist
+    os.makedirs(out_folder, exist_ok=True)
 
-for file_name in os.listdir(folder_name):
-    if file_name.startswith("kuramoto"):
-        print("Running {}...".format(file_name), end='\r')
-        x_vals_loaded = np.loadtxt(os.path.join(folder_name,file_name), delimiter=",")
-        standized_vals = standardize_matrix(x_vals_loaded)
-        correlation_matrix = np.corrcoef(standized_vals, rowvar=False)
-        eigenvalues = np.linalg.eigvals(correlation_matrix)
+    for file_name in os.listdir(source_folder):
+        if file_name.startswith("kuramoto"):
+            print("Running {}...".format(file_name), end='\r')
+            with gzip.open(os.path.join(source_folder,file_name), "rt") as f:
+                x_vals_loaded = np.loadtxt(f, delimiter=",")
 
-        # Save the correlations
-        file_path_out = os.path.join(folder_2,file_name)
-        np.savetxt(file_path_out, correlation_matrix, delimiter=",")
+            standized_vals = standardize_matrix(x_vals_loaded)
+            correlation_matrix = np.corrcoef(standized_vals, rowvar=False)
+            eigenvalues = np.linalg.eigvals(correlation_matrix)
 
-        print("{} ...done!".format(file_name))
+            # Save the results
+            file_path_out = os.path.join(out_folder, file_name)
+            with gzip.open(file_path_out, "wt") as f:
+                    np.savetxt(f, correlation_matrix, delimiter=",")
+
+            print("{} ...done!".format(file_name))

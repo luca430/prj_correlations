@@ -1,8 +1,15 @@
+# Script to compute global measures using graph-tools.
+# NB: this script is suppose to run on a virtual machine with a volume attached. In case you are running locally
+# pay attention to folders.
+
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import numpy as np
 import graph_tool.all as gt
-from global_funcs2 import *
-'''
+from global_funcs import *
+
 # compute global quantities for original graphs and save results in dedicated dictionaries
 for n_nodes in [100, 200, 500, 1000]:
     
@@ -23,11 +30,11 @@ for n_nodes in [100, 200, 500, 1000]:
     #Save the dictionary
     print("\n")
     np.save(f"global_variables2/N_{n_nodes}_global_original.npy", N_dict)
-'''
-# compute global quantities for reconstructed graphs and save results in dedicated dictionaries
-for n_nodes in [100,200,500,1000]:
 
-    print(f"Computing the global variables of N={n_nodes} networks.")
+# compute global quantities for reconstructed graphs and save results in dedicated dictionaries
+for n_nodes in [100, 200, 500, 1000]:
+
+    print(f"Computing the global variables of N={n_nodes}.")
     path = f"/mnt/corr_data/kuramoto/filtered_corr/N{n_nodes}/Noiseless"
 
     #N_dict = build_dict()

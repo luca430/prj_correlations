@@ -1,3 +1,5 @@
+# Module which contains many functions for computing global measures
+
 import os
 import numpy as np
 import graph_tool.all as gt
