@@ -28,5 +28,5 @@ You can do that by exporting a new one with the command:
 conda env export --from-history > environment.yml
 ```
 This will overwrite the old file with a new one which is "personalized" to your pc. In order to make it usable by other you need to open the new environment.yml file
-and manually remove the line "prefix: <your>/<specific>/<path>" .
+and manually remove the line "prefix: path/specific/to/your/machine" .
 In this way any other machine can use this file and store binaries in their default folders.
