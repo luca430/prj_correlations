@@ -2,37 +2,53 @@
 
 import os
 import gzip
+import time
 import numpy as np
+import multiprocessing
 np.random.seed(1234)
 
-# Define the parameters
-T = 10
-dt = 0.005
+def ts_generator(params):
+    
+    # Extract input/output folder paths
+    input_, output_, n, i = params
 
-input_folder = "./graphs"
-output_folder = "./white_noise/data/time_series"
+    # Compute time series
+    T, dt = 10, 0.005
+    x_vals = np.random.normal(size=(int(T/dt), n))
 
-# Create the output folder if it doesn't exist
-os.makedirs(output_folder, exist_ok=True)
+    # Save the results
+    with gzip.open(output_, "wt") as f:
+            np.savetxt(f, x_vals, delimiter=",")
 
-# Iterate through each file in the 'graphs' folder
-file_number = 0
-for file_name in os.listdir(input_folder):
-    if file_name.endswith(".gml"):
-        file_number += 1
-        print("Computing {}/100...".format(file_number), end="\r")
+def main():
+     
+    input_folder = "./graphs"
+    output_folder = "./white_noise/data/time_series"
+    os.makedirs(output_folder, exist_ok=True)
 
-        # Extract n and i from the file name (assuming the format is "graph_n_i.gml")
-        base_name = os.path.splitext(file_name)[0]  # remove .gml extension
-        _, n_str, i_str = base_name.split('_')
-        n = int(n_str)
-        i = int(i_str)
+    # Iterate through each file in the 'graphs' folder
+    file_paths = []
+    for file_name in os.listdir(input_folder):
+        if file_name.endswith(".gml"):
 
-        x_vals = np.random.normal(size=(int(T/dt), n))
+            # Extract n and i from the file name (assuming the format is "graph_n_i.gml")
+            base_name = os.path.splitext(file_name)[0]  # remove .gml extension
+            _, n_str, i_str = base_name.split('_')
+            n = int(n_str)
+            i = int(i_str)
 
-        # Save the results
-        file_path_out = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
-        with gzip.open(file_path_out, "wt") as f:
-                np.savetxt(f, x_vals, delimiter=",")
+            input_file_path = os.path.join(input_folder,file_name)
+            output_file_path = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
+            file_paths.append([input_file_path, output_file_path, n, i])
 
-print("Done!")
+    # Parallel processing
+    num_cores = 11  # Use physical cores
+    with multiprocessing.Pool(processes=num_cores) as pool:
+        pool.map(ts_generator, file_paths)
+
+if __name__ == "__main__":
+    t0 = time.time()
+    main()
+    print(np.round(time.time() - t0,4),"s")
+
+
