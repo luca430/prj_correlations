@@ -42,7 +42,7 @@ def main():
             file_paths.append([input_file_path, output_file_path, n, i])
 
     # Parallel processing
-    num_cores = 11  # Use physical cores
+    num_cores = 10  # Use physical cores
     with multiprocessing.Pool(processes=num_cores) as pool:
         pool.map(ts_generator, file_paths)
 
