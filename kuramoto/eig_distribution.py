@@ -75,16 +75,15 @@ def getPCA(matrix):
     eVal, eVec = eVal[indices], eVec[:, indices]
     return eVal, eVec
 
-input_path = "./kuramoto/data/corr_matrices"
-output_path = "./kuramoto/data/distributions"
-os.makedirs(output_path, exist_ok=True) # Create the output folder if it doesn't exist
-
 # distributions domain
 zi, zf, dz = 0, 200, 0.01
 z_range = np.arange(zi, zf, dz)
 
 print("Extracting files...")
 for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
+    input_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+    output_folder = "./kuramoto/data/distributions/K_{}".format(k)
+    os.makedirs(output_folder, exist_ok=True)
 
     print('Interpolating k = {}...'.format(k))
     file_list_100 = []
@@ -92,8 +91,7 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
     file_list_500 = []
     file_list_1000 = []
 
-    corr_path = os.path.join(input_path,"K_{}".format(k))
-    for file_name in os.listdir(corr_path):
+    for file_name in os.listdir(input_folder):
         # Extract n and i from the file name
         base_name = os.path.splitext(file_name)[0][:-4]  # remove .csv.gz extension
         _, n_str, i_str = base_name.split('_')
@@ -113,7 +111,7 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
     ###### n = 100 ######
     print('\tInterpolating n = 100...')
     for file in file_list_100:
-        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+        with gzip.open(os.path.join(input_folder,file), "rt") as f:
                 x = np.loadtxt(f, delimiter=",")
         eVal, eVec = getPCA(x)
         pdf = fitKDE(eVal, bWidth=0.01, fill=True)
@@ -121,13 +119,12 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         pdf_100 += np.array([pdf_func(z) for z in z_range])/len(file_list_100)
 
     pdf_100_emp = pd.Series(pdf_100, index=z_range)
-    distr_path = os.path.join(output_path,"K_{}".format(k))
-    pdf_100_emp.to_csv(os.path.join(output_path,'pdf_100.csv'), header=True)
+    pdf_100_emp.to_csv(os.path.join(output_folder,'pdf_100.csv'), header=True)
 
     ###### n = 200 ######
     print('\tInterpolating n = 200...')
     for file in file_list_200:
-        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+        with gzip.open(os.path.join(input_folder,file), "rt") as f:
                 x = np.loadtxt(f, delimiter=",")
         eVal, eVec = getPCA(x)
         pdf = fitKDE(eVal, bWidth=0.01, fill=True)
@@ -135,13 +132,12 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         pdf_200 += np.array([pdf_func(z) for z in z_range])/len(file_list_200)
 
     pdf_200_emp = pd.Series(pdf_200, index=z_range)
-    distr_path = os.path.join(output_path,"K_{}".format(k))
-    pdf_200_emp.to_csv(os.path.join(output_path,'pdf_200.csv'), header=True)
+    pdf_200_emp.to_csv(os.path.join(output_folder,'pdf_200.csv'), header=True)
 
     ###### n = 500 ######
     print('\tInterpolating n = 500...')
     for file in file_list_500:
-        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+        with gzip.open(os.path.join(input_folder,file), "rt") as f:
                 x = np.loadtxt(f, delimiter=",")
         eVal, eVec = getPCA(x)
         pdf = fitKDE(eVal, bWidth=0.01, fill=True)
@@ -149,13 +145,12 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         pdf_500 += np.array([pdf_func(z) for z in z_range])/len(file_list_500)
 
     pdf_500_emp = pd.Series(pdf_500, index=z_range)
-    distr_path = os.path.join(output_path,"K_{}".format(k))
-    pdf_500_emp.to_csv(os.path.join(output_path,'pdf_500.csv'), header=True)
+    pdf_500_emp.to_csv(os.path.join(output_folder,'pdf_500.csv'), header=True)
 
     ###### n = 1000 ######
     print('\tInterpolating n = 1000...')
     for file in file_list_1000:
-        with gzip.open(os.path.join(corr_path,file), "rt") as f:
+        with gzip.open(os.path.join(input_folder,file), "rt") as f:
                 x = np.loadtxt(f, delimiter=",")
         eVal, eVec = getPCA(x)
         pdf = fitKDE(eVal, bWidth=0.01, fill=True)
@@ -163,7 +158,6 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         pdf_1000 += np.array([pdf_func(z) for z in z_range])/len(file_list_1000)
 
     pdf_1000_emp = pd.Series(pdf_1000, index=z_range)
-    distr_path = os.path.join(output_path,"K_{}".format(k))
-    pdf_1000_emp.to_csv(os.path.join(output_path,'pdf_1000.csv'), header=True)
+    pdf_1000_emp.to_csv(os.path.join(output_folder,'pdf_1000.csv'), header=True)
 
 print("Done!")

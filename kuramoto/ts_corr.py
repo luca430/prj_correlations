@@ -17,16 +17,16 @@ def standardize_matrix(matrix):
     return standardized_matrix
 
 for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
-    source_folder = "./kuramoto/data/time_series/K_{}".format(k)
-    out_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+    input_folder = "./kuramoto/data/time_series/K_{}".format(k)
+    output_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
 
     # Create the output folders if it doesn't exist
-    os.makedirs(out_folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
 
-    for file_name in os.listdir(source_folder):
+    for file_name in os.listdir(input_folder):
         if file_name.startswith("kuramoto"):
             print("Running {}...".format(file_name), end='\r')
-            with gzip.open(os.path.join(source_folder,file_name), "rt") as f:
+            with gzip.open(os.path.join(input_folder,file_name), "rt") as f:
                 x_vals_loaded = np.loadtxt(f, delimiter=",")
 
             standized_vals = standardize_matrix(x_vals_loaded)
@@ -34,7 +34,7 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
             eigenvalues = np.linalg.eigvals(correlation_matrix)
 
             # Save the results
-            file_path_out = os.path.join(out_folder, file_name)
+            file_path_out = os.path.join(output_folder, file_name)
             with gzip.open(file_path_out, "wt") as f:
                     np.savetxt(f, correlation_matrix, delimiter=",")
 

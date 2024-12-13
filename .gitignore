@@ -1,5 +1,8 @@
-#MacOS files
+# MacOS files
 *.DS_STORE
 
-#Data
+# Cache
+__pycache__/
+
+# Data
 */data

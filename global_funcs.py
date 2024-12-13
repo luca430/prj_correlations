@@ -38,27 +38,27 @@ def extract_file_information(file_path):
 def explore_dict(global_dict, keys):
     # Function to easily access global variables.
     # 'keys' is an array of strings containing ORDERED keys from bottom to top.
-    # Example: keys = ['Neigh_degree','k0'] is ok but the opposite is not.
-    numbers = list(global_dict.keys())
-    ks = list(global_dict['1'].keys())
-    methods = list(global_dict['1']['k0'].keys())
-    taus = list(global_dict['1']['k0']['Fisher'].keys())
-    ps = list(global_dict['1']['k0']['Naive'].keys())
-    measures = list(global_dict['1']['k0']['Fisher']['tau1.0'].keys())
+    # Example: keys = ['Neigh_degree','N_100'] is ok but the opposite is not.
+    n_nodes = list(global_dict.keys())
+    idx = list(global_dict['N_100'].keys())
+    methods = list(global_dict['N_100'][1].keys())
+    taus = list(global_dict['N_100'][1]['Fisher'].keys())
+    ps = list(global_dict['N_100'][1]['Naive'].keys())
+    measures = list(global_dict['N_100'][1]['Fisher']['tau1.0'].keys())
 
     out_dict = global_dict
     for key in keys:
         if key in measures:
-            out_dict = {n:  {k: {m: {t: out_dict[n][k][m][t][key] for t in taus} for m in ['Fisher','FisherRMT']} | {m: {p: out_dict[n][k][m][p][key] for p in ps} for m in ['Naive','NaiveRMT']} for k in ks} for n in numbers}
+            out_dict = {n:  {i: {m: {t: out_dict[n][i][m][t][key] for t in taus} for m in ['Fisher','FisherRMT']} | {m: {p: out_dict[n][i][m][p][key] for p in ps} for m in ['Naive','NaiveRMT']} for i in idx} for n in n_nodes}
         elif key in ps:
-            out_dict = {n:  {k: {m: out_dict[n][k][m][key] for m in ['Naive','NaiveRMT']} for k in ks} for n in numbers}
+            out_dict = {n:  {i: {m: out_dict[n][i][m][key] for m in ['Naive','NaiveRMT']} for i in idx} for n in n_nodes}
         elif key in taus:
-            out_dict = {n:  {k: {m: out_dict[n][k][m][key] for m in ['Fisher','FisherRMT']} for k in ks} for n in numbers}
+            out_dict = {n:  {i: {m: out_dict[n][i][m][key] for m in ['Fisher','FisherRMT']} for i in idx} for n in n_nodes}
         elif key in methods:
-            out_dict = {n:  {k: out_dict[n][k][key] for k in ks} for n in numbers}
-        elif key in ks:
-            out_dict = {n: out_dict[n][key] for n in numbers}
-        elif key in numbers:
+            out_dict = {n:  {i: out_dict[n][i][key] for i in idx} for n in n_nodes}
+        elif key in idx:
+            out_dict = {n: out_dict[n][key] for n in n_nodes}
+        elif key in n_nodes:
             out_dict = out_dict[key]
         else:
             return 'Wrong key input.'

@@ -9,18 +9,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 from global_funcs import *
 
-output_path = "./kuramoto/data/global_measures"
-os.makedirs(output_path, exist_ok=True)
+output_folder = "./kuramoto/data/global_measures"
+os.makedirs(output_folder, exist_ok=True)
 
 ### RECONSTRUCTED NETWORKS ###
 for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
 
     print(f"Computing global measures for K={k}...")
-    path = f"./kuramoto/data/filtered_corr/K_{k}"
+    input_folder = f"./kuramoto/data/filtered_corr/K_{k}"
 
     N_dict = build_dict()
 
-    for subdir, dirs, files in os.walk(path):
+    for subdir, dirs, files in os.walk(input_folder):
         for file in files:
             idx, N, method, thresh = extract_file_information(os.path.join(subdir,file))
 
@@ -32,7 +32,7 @@ for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
             N_dict[f"N_{N}"][int(idx)][method][thresh] = compute_global_variables(edge_list, file_dict)
 
     # Save the dictionary
-    file_path = os.path.join(output_path, f"K_{k}_global.npy")
+    file_path = os.path.join(output_folder, f"K_{k}_global.npy")
     np.save(file_path, N_dict)
 
 ### ORIGINAL NETWORKS ###
@@ -52,6 +52,6 @@ for file in os.listdir(graphs_folder):
     N_dict[f"N_{n_str}"][int(i_str)] = compute_global_variables(os.path.join(graphs_folder,file), file_dict, load=True)
 
 # Save the dictionary
-file_path = os.path.join(output_path, f"original_global.npy")
+file_path = os.path.join(output_folder, f"original_global.npy")
 np.save(file_path, N_dict)
 

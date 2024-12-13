@@ -12,13 +12,14 @@ import runge_kutta as rk
 np.random.seed(1234)
 
 # Parameters
-ts_folder = "./kuramoto/data/time_series"
-graphs_folder = "./graphs"
+input_folder = "./graphs"
+output_folder = "./kuramoto/data/time_series"
+
 T = 10
 dt = 0.005
 
 # Create the output folder if it doesn't exist
-os.makedirs(ts_folder, exist_ok=True)
+os.makedirs(output_folder, exist_ok=True)
 
 # Define the kuramoto function (normalized with respect to the mean degree)
 def kuramoto(x, t, w, k, A):
@@ -31,7 +32,7 @@ def kuramoto(x, t, w, k, A):
     
 # Iterate through each file in folder 'graphs'
 file_number = 0
-for file_name in os.listdir(graphs_folder):
+for file_name in os.listdir(input_folder):
     if file_name.endswith(".gml"):
         file_number += 1
         print("Computing {}/100...".format(file_number), end="\r")
@@ -43,7 +44,7 @@ for file_name in os.listdir(graphs_folder):
         i = int(i_str)
 
         # Load the graph
-        file_path_in = os.path.join(graphs_folder, file_name)
+        file_path_in = os.path.join(input_folder, file_name)
         G = nx.read_gml(file_path_in)
         A = nx.adjacency_matrix(G).toarray()
 
@@ -57,7 +58,7 @@ for file_name in os.listdir(graphs_folder):
         # Run the Runge-Kutta for different coupling regimes
         
         for k in K:
-            out_folder = os.path.join(ts_folder, "K_{}".format(k/K_c))
+            out_folder = os.path.join(output_folder, "K_{}".format(k/K_c))
             os.makedirs(out_folder, exist_ok=True)
             t_vals, x_vals = rk.runge_kutta(kuramoto, x0, T, dt = dt, w = w, k = k, A = A)
 

@@ -8,15 +8,16 @@ np.random.seed(1234)
 # Define the parameters
 T = 10
 dt = 0.005
-folder_name = "./white_noise/data/time_series"
-graphs_folder = "./graphs"
+
+input_folder = "./graphs"
+output_folder = "./white_noise/data/time_series"
 
 # Create the output folder if it doesn't exist
-os.makedirs(folder_name, exist_ok=True)
+os.makedirs(output_folder, exist_ok=True)
 
 # Iterate through each file in the 'graphs' folder
 file_number = 0
-for file_name in os.listdir(graphs_folder):
+for file_name in os.listdir(input_folder):
     if file_name.endswith(".gml"):
         file_number += 1
         print("Computing {}/100...".format(file_number), end="\r")
@@ -30,7 +31,7 @@ for file_name in os.listdir(graphs_folder):
         x_vals = np.random.normal(size=(int(T/dt), n))
 
         # Save the results
-        file_path_out = os.path.join(folder_name, "white_{}_{}.csv.gz".format(n, i))
+        file_path_out = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
         with gzip.open(file_path_out, "wt") as f:
                 np.savetxt(f, x_vals, delimiter=",")
 
