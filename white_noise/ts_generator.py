@@ -2,7 +2,6 @@
 
 import os
 import gzip
-import time
 import numpy as np
 import multiprocessing
 np.random.seed(1234)
@@ -10,7 +9,7 @@ np.random.seed(1234)
 def ts_generator(params):
     
     # Extract input/output folder paths
-    input_, output_, n, i = params
+    output_, n = params
 
     # Compute time series
     T, dt = 10, 0.005
@@ -27,7 +26,7 @@ def main():
     os.makedirs(output_folder, exist_ok=True)
 
     # Iterate through each file in the 'graphs' folder
-    file_paths = []
+    params = []
     for file_name in os.listdir(input_folder):
         if file_name.endswith(".gml"):
 
@@ -37,18 +36,15 @@ def main():
             n = int(n_str)
             i = int(i_str)
 
-            input_file_path = os.path.join(input_folder,file_name)
             output_file_path = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
-            file_paths.append([input_file_path, output_file_path, n, i])
+            params.append([output_file_path, n])
 
     # Parallel processing
     num_cores = 10  # Use physical cores
     with multiprocessing.Pool(processes=num_cores) as pool:
-        pool.map(ts_generator, file_paths)
+        pool.map(ts_generator, params)
 
 if __name__ == "__main__":
-    t0 = time.time()
     main()
-    print(np.round(time.time() - t0,4),"s")
 
 
