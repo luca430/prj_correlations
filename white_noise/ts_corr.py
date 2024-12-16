@@ -43,7 +43,7 @@ def main():
     output_folder = "./white_noise/data/corr_matrices"
     os.makedirs(output_folder, exist_ok=True)
 
-    # Iterate through each file in the 'graphs' folder
+    # Iterate through each file in the input folder
     params = []
     for file_name in os.listdir(input_folder):
         if file_name.endswith(".csv.gz"):
