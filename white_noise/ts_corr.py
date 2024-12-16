@@ -1,9 +1,11 @@
-# Script to create the correlation matrices for white noise and store them in folder `./white_noise/data/corr_matrix`.
+# Script to create the correlation matrices for white noise and store them in desired folder.
 
 import os
+import sys
 import gzip
 import numpy as np
 import multiprocessing
+from multiprocessing import Manager
 np.random.seed(1234)
 
 def standardize_matrix(matrix):
@@ -17,7 +19,10 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-def ts_corr(params):
+def ts_corr(params, counter, lock):
+    with lock:  # Use explicit lock for thread safety
+        counter.value += 1
+        print(f"Computing... {counter.value}/100", end="\r")
      
      # Extract input/output folder paths
     input_, output_ = params
@@ -41,10 +46,10 @@ def main():
     # Iterate through each file in the 'graphs' folder
     params = []
     for file_name in os.listdir(input_folder):
-        if file_name.endswith(".gml"):
+        if file_name.endswith(".csv.gz"):
 
-            # Extract n and i from the file name (assuming the format is "graph_n_i.gml")
-            base_name = os.path.splitext(file_name)[0]  # remove .gml extension
+            # Extract n and i from the file name (assuming the format is "white_n_i.csv.gz")
+            base_name = os.path.splitext(file_name)[0][:-4]  # remove .csv.gz extension
             _, n_str, i_str = base_name.split('_')
             n = int(n_str)
             i = int(i_str)
@@ -53,10 +58,18 @@ def main():
             output_file_path = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
             params.append([input_file_path, output_file_path])
 
-    # Parallel processing
-    num_cores = 10  # Use physical cores
-    with multiprocessing.Pool(processes=num_cores) as pool:
-        pool.map(ts_corr, params)
+    # Create a shared counter and lock using Manager
+    with Manager() as manager:
+        counter = manager.Value('i', 0)  # Shared counter
+        lock = manager.Lock()  # Shared lock
+
+        # Parallel processing
+        num_cores = 8  # Use physical cores
+        with multiprocessing.Pool(processes=num_cores) as pool:
+            pool.starmap(ts_corr, [(param, counter, lock) for param in params])
+
+    sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
+    print('Done!')
 
 if __name__ == "__main__":
     main()
