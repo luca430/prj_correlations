@@ -8,9 +8,54 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 from global_funcs import *
+import multiprocessing
+from multiprocessing import Manager
 
-output_folder = "./kuramoto/data/global_measures"
-os.makedirs(output_folder, exist_ok=True)
+def compute_global(params, counter, lock, L):
+    with lock:  # Use explicit lock for thread safety
+        counter.value += 1
+        print(f"\tComputing... {counter.value}/{L}", end="\r")
+     
+     # Extract input/output folder paths
+    input_, output_, k, N_dict = params
+
+    N_dict = build_dict()
+
+    
+
+def main():
+
+    output_folder = "./kuramoto/data/global_measures"
+    os.makedirs(output_folder, exist_ok=True)
+
+    for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
+        print(f"Processing k={k}")
+        input_folder = f"./kuramoto/data/filtered_corr/K_{k}"
+
+    # Iterate through each file in the 'graphs' folder
+        params = []
+        for file_name in os.listdir(input_folder):
+            if file_name.endswith(".csv.gz"):
+                input_file_path = os.path.join(input_folder, file_name)
+                output_file_path = os.path.join(output_folder, file_name)
+                params.append([input_file_path, output_file_path, k])
+        L = len(params)
+
+        # Create a shared counter and lock using Manager
+        with Manager() as manager:
+            counter = manager.Value('i', 0)  # Shared counter
+            lock = manager.Lock()  # Shared lock
+
+            # Parallel processing
+            num_cores = 8  # Use physical cores
+            with multiprocessing.Pool(processes=num_cores) as pool:
+                pool.starmap(ts_corr, [(param, counter, lock, L) for param in params])
+
+        sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
+        print('\tDone!')
+
+if __name__ == "__main__":
+    main()
 
 ### RECONSTRUCTED NETWORKS ###
 for k in [0.0, 1.0, 1.5, 2.5, 5.0]:

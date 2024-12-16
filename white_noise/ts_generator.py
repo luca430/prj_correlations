@@ -9,10 +9,10 @@ from multiprocessing import Manager
 
 np.random.seed(1234)
 
-def ts_generator(params, counter, lock):
+def ts_generator(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
         counter.value += 1
-        print(f"Computing... {counter.value}/100", end="\r")
+        print(f"Computing... {counter.value}/{L}", end="\r")
     
     # Extract input/output folder paths
     output_, n = params
@@ -42,6 +42,7 @@ def main():
 
             output_file_path = os.path.join(output_folder, f"white_{n}_{i}.csv.gz")
             params.append([output_file_path, n])
+    L = len(params)
 
     # Create a shared counter and lock using Manager
     with Manager() as manager:
@@ -51,7 +52,7 @@ def main():
         # Parallel processing
         num_cores = 8  # Use physical cores
         with multiprocessing.Pool(processes=num_cores) as pool:
-            pool.starmap(ts_generator, [(param, counter, lock) for param in params])
+            pool.starmap(ts_generator, [(param, counter, lock, L) for param in params])
 
     sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
     print('Done!')

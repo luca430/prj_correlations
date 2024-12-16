@@ -19,10 +19,10 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-def ts_corr(params, counter, lock):
+def ts_corr(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
         counter.value += 1
-        print(f"Computing... {counter.value}/100", end="\r")
+        print(f"Computing... {counter.value}/{L}", end="\r")
      
      # Extract input/output folder paths
     input_, output_ = params
@@ -47,16 +47,10 @@ def main():
     params = []
     for file_name in os.listdir(input_folder):
         if file_name.endswith(".csv.gz"):
-
-            # Extract n and i from the file name (assuming the format is "white_n_i.csv.gz")
-            base_name = os.path.splitext(file_name)[0][:-4]  # remove .csv.gz extension
-            _, n_str, i_str = base_name.split('_')
-            n = int(n_str)
-            i = int(i_str)
-
             input_file_path = os.path.join(input_folder, file_name)
-            output_file_path = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
+            output_file_path = os.path.join(output_folder, file_name)
             params.append([input_file_path, output_file_path])
+    L = len(params)
 
     # Create a shared counter and lock using Manager
     with Manager() as manager:
@@ -66,7 +60,7 @@ def main():
         # Parallel processing
         num_cores = 8  # Use physical cores
         with multiprocessing.Pool(processes=num_cores) as pool:
-            pool.starmap(ts_corr, [(param, counter, lock) for param in params])
+            pool.starmap(ts_corr, [(param, counter, lock, L) for param in params])
 
     sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
     print('Done!')
