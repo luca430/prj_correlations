@@ -35,7 +35,7 @@ def main():
     ### RECONSTRUCTED NETWORKS ###
     for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         print(f"Computing global measures for k={k}")
-        input_folder = f"./kuramoto/data/filtered_corr/K_{k}"
+        input_folder = f"./kuramoto/data/filtered_matrices/K_{k}"
 
         # Iterate through each file in the input folder
         params = []

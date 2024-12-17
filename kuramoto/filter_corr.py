@@ -22,8 +22,8 @@ def main():
      
     for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         print(f"Processing k={k}")
-        input_folder = "./kuramoto/data/time_series/K_{}".format(k)
-        output_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+        input_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+        output_folder = "./kuramoto/data/filtered_matrices/K_{}".format(k)
         os.makedirs(output_folder, exist_ok=True)
 
         # Iterate through each file in the input folder
@@ -31,8 +31,7 @@ def main():
         for file_name in os.listdir(input_folder):
             if file_name.endswith(".csv.gz"):
                 input_file_path = os.path.join(input_folder, file_name)
-                output_file_path = os.path.join(output_folder, file_name)
-                params.append([input_file_path, output_file_path])
+                params.append([input_file_path, output_folder])
         L = len(params)
 
         # Create a shared counter and lock using Manager
