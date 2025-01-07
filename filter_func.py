@@ -30,9 +30,8 @@ def apply_thresh(input_file, output_path):
     # Extract n and i from the file name
     base_name = os.path.splitext(input_file)[0][:-4]  # remove .csv.gz extension
     base_name = base_name.split("/")[-1]
-    _, n_str, i_str = base_name.split('_')
+    _, n_str, _ = base_name.split('_')
     n = int(n_str)
-    i = int(i_str)
     
     q = T/n
     with gzip.open(input_file, "rt") as f:

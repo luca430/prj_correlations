@@ -8,50 +8,79 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 from global_funcs import *
+import multiprocessing
+from multiprocessing import Manager
 
-output_folder = "./kuramoto/data/global_measures"
-os.makedirs(output_folder, exist_ok=True)
+def compute_global(params, counter, lock, L):
+    with lock:  # Use explicit lock for thread safety
+        counter.value += 1
+        print(f"\tComputing... {counter.value}/{L}", end="\r")
+     
+     # Extract input/output folder paths
+    input_, output_, k, N_dict = params
 
-### RECONSTRUCTED NETWORKS ###
-for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
-
-    print(f"Computing global measures for K={k}...")
-    input_folder = f"./kuramoto/data/filtered_corr/K_{k}"
-
-    N_dict = build_dict()
-
-    for subdir, dirs, files in os.walk(input_folder):
-        for file in files:
-            idx, N, method, thresh = extract_file_information(os.path.join(subdir,file))
-
-            #make graph from correlation matrix
-            edge_list = mat2edgelist(os.path.join(subdir,file))
-    
-            #Fill the appropriate dictionary entry with the gloal variables
-            file_dict = N_dict[f"N_{N}"][int(idx)][method][thresh]
-            N_dict[f"N_{N}"][int(idx)][method][thresh] = compute_global_variables(edge_list, file_dict)
-
+    idx, N, method, thresh = extract_file_information(input_)
+    edge_list = mat2edgelist(input_)
+    file_dict = N_dict[f"N_{N}"][int(idx)][method][thresh]
+    N_dict[f"N_{N}"][int(idx)][method][thresh] = compute_global_variables(edge_list, file_dict)
     # Save the dictionary
-    file_path = os.path.join(output_folder, f"K_{k}_global.npy")
+    file_path = os.path.join(output_, f"K_{k}_global.npy")
     np.save(file_path, N_dict)
 
-### ORIGINAL NETWORKS ###
-print(f"Computing global measures for original networks...")
-graphs_folder = "./graphs"
-N_dict = {}
-for N in [100, 200, 500, 1000]:
-    N_dict[f"N_{N}"] = {}
-    for i in range(1,26):
-        N_dict[f"N_{N}"][i] = {}
+def main():
 
-for file in os.listdir(graphs_folder):
-    base_name = os.path.splitext(file)[0]
-    _, n_str, i_str = base_name.split('_')
+    output_folder = "./kuramoto/data/global_measures"
+    os.makedirs(output_folder, exist_ok=True)
 
-    file_dict = N_dict[f"N_{n_str}"][int(i_str)]
-    N_dict[f"N_{n_str}"][int(i_str)] = compute_global_variables(os.path.join(graphs_folder,file), file_dict, load=True)
+    ### RECONSTRUCTED NETWORKS ###
+    for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
+        print(f"Computing global measures for k={k}")
+        input_folder = f"./kuramoto/data/filtered_matrices/K_{k}"
 
-# Save the dictionary
-file_path = os.path.join(output_folder, f"original_global.npy")
-np.save(file_path, N_dict)
+        # Iterate through each file in the input folder
+        params = []
+        for file_name in os.listdir(input_folder):
+            if file_name.endswith(".npz"):
+                N_dict = build_dict()
+                input_file_path = os.path.join(input_folder, file_name)
+                params.append([input_file_path, output_folder, k, N_dict])
+        L = len(params)
+
+        # Create a shared counter and lock using Manager
+        with Manager() as manager:
+            counter = manager.Value('i', 0)  # Shared counter
+            lock = manager.Lock()  # Shared lock
+
+            # Parallel processing
+            num_cores = 8  # Use physical cores
+            with multiprocessing.Pool(processes=num_cores) as pool:
+                pool.starmap(compute_global, [(param, counter, lock, L) for param in params])
+
+        sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
+        print('\tDone!')
+
+    ### ORIGINAL NETWORKS ###
+    print(f"Computing global measures for original networks...")
+    graphs_folder = "./graphs"
+    N_dict = {}
+    for N in [100, 200, 500, 1000]:
+        N_dict[f"N_{N}"] = {}
+        for i in range(1,26):
+            N_dict[f"N_{N}"][i] = {}
+
+    for file in os.listdir(graphs_folder):
+        base_name = os.path.splitext(file)[0]
+        _, n_str, i_str = base_name.split('_')
+
+        file_dict = N_dict[f"N_{n_str}"][int(i_str)]
+        N_dict[f"N_{n_str}"][int(i_str)] = compute_global_variables(os.path.join(graphs_folder,file), file_dict, load=True)
+
+    # Save the dictionary
+    file_path = os.path.join(output_folder, f"original_global.npy")
+    np.save(file_path, N_dict)
+    print('\tDone!')
+
+if __name__ == "__main__":
+    main()
+
 

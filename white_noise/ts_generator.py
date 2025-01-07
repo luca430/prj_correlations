@@ -1,38 +1,61 @@
-# Script to generate white noise time series and store them in folder `./white_noise/data/time/series`.
+# Script to generate white noise time series and store them in desired folder.
 
 import os
+import sys
 import gzip
 import numpy as np
+import multiprocessing
+from multiprocessing import Manager
+
 np.random.seed(1234)
 
-# Define the parameters
-T = 10
-dt = 0.005
+def ts_generator(params, counter, lock, L):
+    with lock:  # Use explicit lock for thread safety
+        counter.value += 1
+        print(f"Computing... {counter.value}/{L}", end="\r")
+    
+    # Extract input/output folder paths
+    output_, n = params
 
-input_folder = "./graphs"
-output_folder = "./white_noise/data/time_series"
+    # Compute time series
+    T, dt = 10, 0.005
+    x_vals = np.random.normal(size=(int(T/dt), n))
 
-# Create the output folder if it doesn't exist
-os.makedirs(output_folder, exist_ok=True)
+    # Save the results
+    with gzip.open(output_, "wt") as f:
+        np.savetxt(f, x_vals, delimiter=",")
 
-# Iterate through each file in the 'graphs' folder
-file_number = 0
-for file_name in os.listdir(input_folder):
-    if file_name.endswith(".gml"):
-        file_number += 1
-        print("Computing {}/100...".format(file_number), end="\r")
+def main():
+    input_folder = "./graphs"
+    output_folder = "./white_noise/data/time_series"
+    os.makedirs(output_folder, exist_ok=True)
 
-        # Extract n and i from the file name (assuming the format is "graph_n_i.gml")
-        base_name = os.path.splitext(file_name)[0]  # remove .gml extension
-        _, n_str, i_str = base_name.split('_')
-        n = int(n_str)
-        i = int(i_str)
+    # Prepare input parameters
+    params = []
+    for file_name in os.listdir(input_folder):
+        if file_name.endswith(".gml"):
+            # Extract n and i from the file name (assuming the format is "graph_n_i.gml")
+            base_name = os.path.splitext(file_name)[0]  # remove .gml extension
+            _, n_str, i_str = base_name.split('_')
+            n = int(n_str)
+            i = int(i_str)
 
-        x_vals = np.random.normal(size=(int(T/dt), n))
+            output_file_path = os.path.join(output_folder, f"white_{n}_{i}.csv.gz")
+            params.append([output_file_path, n])
+    L = len(params)
 
-        # Save the results
-        file_path_out = os.path.join(output_folder, "white_{}_{}.csv.gz".format(n, i))
-        with gzip.open(file_path_out, "wt") as f:
-                np.savetxt(f, x_vals, delimiter=",")
+    # Create a shared counter and lock using Manager
+    with Manager() as manager:
+        counter = manager.Value('i', 0)  # Shared counter
+        lock = manager.Lock()  # Shared lock
 
-print("Done!")
+        # Parallel processing
+        num_cores = 8  # Use physical cores
+        with multiprocessing.Pool(processes=num_cores) as pool:
+            pool.starmap(ts_generator, [(param, counter, lock, L) for param in params])
+
+    sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
+    print('Done!')
+
+if __name__ == "__main__":
+    main()

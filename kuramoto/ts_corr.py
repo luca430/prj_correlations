@@ -1,8 +1,11 @@
-# Script to generate the correlation matrices for kuramoto time series and store them in './kuramoto/data/corr_matrix'.
+# Script to create the correlation matrices for kuramoto ts and store them in the desired folder.
 
 import os
+import sys
 import gzip
 import numpy as np
+import multiprocessing
+from multiprocessing import Manager
 np.random.seed(1234)
 
 def standardize_matrix(matrix):
@@ -16,26 +19,53 @@ def standardize_matrix(matrix):
     
     return standardized_matrix
 
-for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
-    input_folder = "./kuramoto/data/time_series/K_{}".format(k)
-    output_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+def ts_corr(params, counter, lock, L):
+    with lock:  # Use explicit lock for thread safety
+        counter.value += 1
+        print(f"\tComputing... {counter.value}/{L}", end="\r")
+     
+     # Extract input/output folder paths
+    input_, output_ = params
 
-    # Create the output folders if it doesn't exist
-    os.makedirs(output_folder, exist_ok=True)
+    with gzip.open(input_, "rt") as f:
+        x_vals_loaded = np.loadtxt(f, delimiter=",")
 
-    for file_name in os.listdir(input_folder):
-        if file_name.startswith("kuramoto"):
-            print("Running {}...".format(file_name), end='\r')
-            with gzip.open(os.path.join(input_folder,file_name), "rt") as f:
-                x_vals_loaded = np.loadtxt(f, delimiter=",")
+    standized_vals = standardize_matrix(x_vals_loaded)
+    correlation_matrix = np.corrcoef(standized_vals, rowvar=False)
 
-            standized_vals = standardize_matrix(x_vals_loaded)
-            correlation_matrix = np.corrcoef(standized_vals, rowvar=False)
-            eigenvalues = np.linalg.eigvals(correlation_matrix)
+    # Save the results
+    with gzip.open(output_, "wt") as f:
+            np.savetxt(f, correlation_matrix, delimiter=",")
 
-            # Save the results
-            file_path_out = os.path.join(output_folder, file_name)
-            with gzip.open(file_path_out, "wt") as f:
-                    np.savetxt(f, correlation_matrix, delimiter=",")
+def main():
+     
+    for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
+        print(f"Processing k={k}")
+        input_folder = "./kuramoto/data/time_series/K_{}".format(k)
+        output_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+        os.makedirs(output_folder, exist_ok=True)
 
-            print("{} ...done!".format(file_name))
+        # Iterate through each file in the input folder
+        params = []
+        for file_name in os.listdir(input_folder):
+            if file_name.endswith(".csv.gz"):
+                input_file_path = os.path.join(input_folder, file_name)
+                output_file_path = os.path.join(output_folder, file_name)
+                params.append([input_file_path, output_file_path])
+        L = len(params)
+
+        # Create a shared counter and lock using Manager
+        with Manager() as manager:
+            counter = manager.Value('i', 0)  # Shared counter
+            lock = manager.Lock()  # Shared lock
+
+            # Parallel processing
+            num_cores = 8  # Use physical cores
+            with multiprocessing.Pool(processes=num_cores) as pool:
+                pool.starmap(ts_corr, [(param, counter, lock, L) for param in params])
+
+        sys.stdout.write("\r" + " " * 50 + "\r")  # Clear the line by overwriting with spaces
+        print('\tDone!')
+
+if __name__ == "__main__":
+    main()
