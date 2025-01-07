@@ -1,4 +1,4 @@
-# Script to generate Kuramoto time series on netwroks contained in './graphs' and store 
+# Script to generate LIF time series on netwroks contained in './graphs' and store 
 # them in the desired folder.
 
 import os
@@ -14,14 +14,18 @@ from multiprocessing import Manager
 
 np.random.seed(1234)
 
-# Define the kuramoto function (normalized with respect to the mean degree)
-def kuramoto(x, t, w, k, A):
+# Define the LIF function
+def LIF(u, t, k, A, fire, t_f,
+        u_rest=0, u_r=-5, theta=35, 
+        R=100, tau=10, I=100, u_syn=0, tau_syn=5):
+
+    u[u > theta] = u_r
+    fire[u > theta] = k
+    t_f[u > theta] = t
+    g = np.array([fire[i]*np.exp(-(t - t_f[i])/tau_syn) for i in range(len(u))])
+    g = np.dot(A,g)
     
-    phase_diff = x[:, np.newaxis] - x
-    sin_phase_diff = np.sin(phase_diff)
-    coupling_term = k/np.mean(np.sum(A, axis=1))*np.dot(A, sin_phase_diff)
-    
-    return w + np.diag(coupling_term)
+    return (u_rest - u + R*I)/tau + g*(u - u_syn)
 
 def ts_generator(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
@@ -37,26 +41,24 @@ def ts_generator(params, counter, lock, L):
 
     # Initial conditions and equation parameters
     T, dt = 10, 0.005
-    x0 = np.random.rand(n)*2*np.pi
-    mu, sig = 0, 20
-    w = np.random.normal(mu, sig, size=n)
-    K_c = 30    # rescaling factor
-    K = [0.0, K_c, 1.5*K_c, 2.5*K_c, 5*K_c] # Kuramoto coupling regimes
+    u0 = -10 + np.random.rand(n)*20
+    K_c = 15    # rescaling factor
+    K = [0.0, K_c, 1.5*K_c, 2.5*K_c, 5*K_c] # LIF coupling regimes
 
     # Run the Runge-Kutta for different coupling regimes
     for k in K:
         out_folder = os.path.join(output_, "K_{}".format(k/K_c))
         os.makedirs(out_folder, exist_ok=True)
-        t_vals, x_vals = rk.runge_kutta(kuramoto, x0, T, dt = dt, w = w, k = k, A = A)
+        t_vals, x_vals = rk.runge_kutta(LIF, u0, T, A = A, k = k, fire=np.zeros(n), t_f=np.zeros(n))
 
         # Save the results
-        file_path_out = os.path.join(out_folder, "kuramoto_{}_{}.csv.gz".format(n, i))
+        file_path_out = os.path.join(out_folder, "LIF_{}_{}.csv.gz".format(n, i))
         with gzip.open(file_path_out, "wt") as f:
             np.savetxt(f, x_vals, delimiter=",")
 
 def main():
     input_folder = "./graphs"
-    output_folder = "./kuramoto/data/time_series"
+    output_folder = "./LIF/data/time_series"
     os.makedirs(output_folder, exist_ok=True)
 
     num_cores = int(os.getenv("NUM_CORES", 8))  # Number of cores used. Default is 8

@@ -30,7 +30,7 @@ def compute_global(params, counter, lock, L):
 
 def main():
 
-    output_folder = "./kuramoto/data/global_measures"
+    output_folder = "./LIF/data/global_measures"
     os.makedirs(output_folder, exist_ok=True)
 
     num_cores = int(os.getenv("NUM_CORES", 8))  # Number of cores used. Default is 8
@@ -38,7 +38,7 @@ def main():
     ### RECONSTRUCTED NETWORKS ###
     for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         print(f"Computing global measures for k={k}")
-        input_folder = f"./kuramoto/data/filtered_matrices/K_{k}"
+        input_folder = f"./LIF/data/filtered_matrices/K_{k}"
 
         # Iterate through each file in the input folder
         params = []

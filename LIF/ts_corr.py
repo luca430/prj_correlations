@@ -1,4 +1,4 @@
-# Script to create the correlation matrices for kuramoto ts and store them in the desired folder.
+# Script to create the correlation matrices for LIF ts and store them in the desired folder.
 
 import os
 import sys
@@ -44,8 +44,8 @@ def main():
      
     for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
         print(f"Processing k={k}")
-        input_folder = "./kuramoto/data/time_series/K_{}".format(k)
-        output_folder = "./kuramoto/data/corr_matrices/K_{}".format(k)
+        input_folder = "./LIF/data/time_series/K_{}".format(k)
+        output_folder = "./LIF/data/corr_matrices/K_{}".format(k)
         os.makedirs(output_folder, exist_ok=True)
 
         # Iterate through each file in the input folder
