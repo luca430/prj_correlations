@@ -17,5 +17,3 @@ dependencies:
   - anaconda::seaborn
   - umap-learn
   - ipykernel
-  post-create:
-  - python -m ipykernel install --user --name correlations --display-name "Python (correlations)"

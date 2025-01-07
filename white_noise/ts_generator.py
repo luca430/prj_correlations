@@ -12,7 +12,8 @@ np.random.seed(1234)
 def ts_generator(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
         counter.value += 1
-        print(f"Computing... {counter.value}/{L}", end="\r")
+        if counter.value % 10 == 0:
+            print(f"Computing... {counter.value}/{L}", end="\r")
     
     # Extract input/output folder paths
     output_, n = params
