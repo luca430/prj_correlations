@@ -22,8 +22,7 @@ def standardize_matrix(matrix):
 def ts_corr(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
         counter.value += 1
-        if counter.value % 10 == 0:
-            print(f"Computing... {counter.value}/{L}", end="\r")
+        print(f"Computing... {counter.value}/{L}", end="\r")
      
      # Extract input/output folder paths
     input_, output_ = params
