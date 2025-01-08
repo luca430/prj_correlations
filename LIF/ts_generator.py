@@ -14,18 +14,24 @@ from multiprocessing import Manager
 
 np.random.seed(1234)
 
-# Define the LIF function
-def LIF(u, t, k, A, fire, t_f,
-        u_rest=0, u_r=-5, theta=35, 
-        R=100, tau=10, I=100, u_syn=0, tau_syn=5):
+# Define state variables for the neurons
+class LIFState:
+    def __init__(self, n):
+        self.fire = np.zeros(n)
+        self.t_f = np.zeros(n)
 
+# Define the LIF function
+def LIF(u, t, k, A, state,
+        u_rest=0, u_r=-5, theta=60, 
+        R=50, tau=10, I=10, u_syn=65, tau_syn=5):
+    
+    state.fire[u > theta] = k
+    state.t_f[u > theta] = t
     u[u > theta] = u_r
-    fire[u > theta] = k
-    t_f[u > theta] = t
-    g = np.array([fire[i]*np.exp(-(t - t_f[i])/tau_syn) for i in range(len(u))])
+    g = state.fire*np.exp(-(t - state.t_f) / tau_syn)
     g = np.dot(A,g)
     
-    return (u_rest - u + R*I)/tau + g*(u - u_syn)
+    return (u_rest - u + R*I)/tau - g*(u - u_syn)
 
 def ts_generator(params, counter, lock, L):
     with lock:  # Use explicit lock for thread safety
@@ -41,15 +47,16 @@ def ts_generator(params, counter, lock, L):
 
     # Initial conditions and equation parameters
     T, dt = 10, 0.005
-    u0 = -10 + np.random.rand(n)*20
-    K_c = 15    # rescaling factor
+    u0 = -20 + np.random.rand(n)*40
+    K_c = 0.4    # rescaling factor
     K = [0.0, K_c, 1.5*K_c, 2.5*K_c, 5*K_c] # LIF coupling regimes
 
     # Run the Runge-Kutta for different coupling regimes
     for k in K:
-        out_folder = os.path.join(output_, "K_{}".format(k/K_c))
+        state = LIFState(n)
+        out_folder = os.path.join(output_, "K_{}".format(np.round(k/K_c,1)))
         os.makedirs(out_folder, exist_ok=True)
-        t_vals, x_vals = rk.runge_kutta(LIF, u0, T, A = A, k = k, fire=np.zeros(n), t_f=np.zeros(n))
+        t_vals, x_vals = rk.runge_kutta(LIF, u0, T, A=A, k=k, state=state)
 
         # Save the results
         file_path_out = os.path.join(out_folder, "LIF_{}_{}.csv.gz".format(n, i))
