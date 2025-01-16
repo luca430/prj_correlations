@@ -1,3 +1,10 @@
+# Script to get status of running code via Keybase.
+# Usage: '(bash) python3 bot_run.py --script your_script --channel your_comunelab.sandbox_channel'
+# All the prints of your_script are captured and sent real time to your_comunelab.sandbox_channel. If you don't want all
+# the prints to be sent you can only send the prints that contains specific words using the flag --words.
+# For example if your_script prints "Simulation started" when it starts and "Simulation ended" when it ends, you can run
+# '(bash) python3 bot_run.py --script your_script --channel your_comunelab.sandbox_channel --words started ended'.
+
 import os
 import sys
 import json
