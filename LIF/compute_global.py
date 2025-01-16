@@ -44,16 +44,18 @@ def main():
 
         # Iterate through each file in the input folder
         params = []
-        for file_name in os.listdir(input_folder1):
-            if file_name.endswith(".npz"):
-                N_dict = build_dict()
-                input_file_path = os.path.join(input_folder1, file_name)
-                params.append([input_file_path, output_folder1, k, N_dict])
-        for file_name in os.listdir(input_folder2):
-            if file_name.endswith(".npz"):
-                N_dict = build_dict()
-                input_file_path = os.path.join(input_folder2, file_name)
-                params.append([input_file_path, output_folder2, k, N_dict])
+        for root, _, files in os.walk(input_folder1):
+            for file_name in files:
+                if file_name.endswith(".npz"):
+                    N_dict = build_dict()
+                    input_file_path = os.path.join(input_folder1, os.path.join(root, file_name))
+                    params.append([input_file_path, output_folder1, k, N_dict])
+        for root, _, files in os.walk(input_folder2):
+            for file_name in files:
+                if file_name.endswith(".npz"):
+                    N_dict = build_dict()
+                    input_file_path = os.path.join(input_folder2, os.path.join(root, file_name))
+                    params.append([input_file_path, output_folder2, k, N_dict])
         L = len(params)
 
         # Create a shared counter and lock using Manager
@@ -85,7 +87,9 @@ def main():
         N_dict[f"N_{n_str}"][int(i_str)] = compute_global_variables(os.path.join(graphs_folder,file), file_dict, load=True)
 
     # Save the dictionary
-    file_path = os.path.join(output_folder, f"original_global.npy")
+    file_path = os.path.join(output_folder1, f"original_global.npy")
+    np.save(file_path, N_dict)
+    file_path = os.path.join(output_folder2, f"original_global.npy")
     np.save(file_path, N_dict)
     print('\tDone!')
 

@@ -41,11 +41,12 @@ def main():
 
         # Iterate through each file in the input folder
         params = []
-        for file_name in os.listdir(input_folder):
-            if file_name.endswith(".npz"):
-                N_dict = build_dict()
-                input_file_path = os.path.join(input_folder, file_name)
-                params.append([input_file_path, output_folder, k, N_dict])
+        for root, _, files in os.walk(input_folder):
+            for file_name in files:
+                if file_name.endswith(".npz"):
+                    N_dict = build_dict()
+                    input_file_path = os.path.join(input_folder, os.path.join(root, file_name))
+                    params.append([input_file_path, output_folder, k, N_dict])
         L = len(params)
 
         # Create a shared counter and lock using Manager
