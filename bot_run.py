@@ -117,7 +117,7 @@ def main():
         sys.exit(1)
 
     print(f"[INFO] Monitoring Keybase channel '{channel}'.")
-    threading.Thread(target=monitor_keybase, args=(channel, 'Status?', respond_to_trigger), daemon=True).start()
+    threading.Thread(target=monitor_keybase, args=(channel, 'Status?'), daemon=True).start()
 
     signal.signal(signal.SIGINT, handle_interrupt)
     print(f"[INFO] Running script '{script_path}'. Press Ctrl+C to stop.")
