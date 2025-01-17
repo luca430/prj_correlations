@@ -1,3 +1,10 @@
+# Script to get status of running code via Keybase.
+# Usage: '(bash) python3 bot_run.py --script your_script --channel your_comunelab.sandbox_channel'
+# All the prints of your_script are captured and sent real time to your_comunelab.sandbox_channel. If you don't want all
+# the prints to be sent you can only send the prints that contains specific words using the flag --words.
+# For example if your_script prints "Simulation started" when it starts and "Simulation ended" when it ends, you can run
+# '(bash) python3 bot_run.py --script your_script --channel your_comunelab.sandbox_channel --words started ended'.
+
 import os
 import sys
 import json
@@ -10,6 +17,7 @@ import subprocess
 global last_line
 last_line = ""  # Initialize last_line
 last_line_lock = threading.Lock()  # Initialize the Lock
+stop_event = threading.Event()  # Event to signal main process to stop
 
 def send_to_keybase(message, channel):
     """Send a message to Keybase."""
@@ -67,8 +75,9 @@ def run_script(script_path, channel, words):
 
     try:
         global process  # Make process accessible in the signal handler
+        executable = sys.executable
         process = subprocess.Popen(
-            [sys.executable, "-u", script_path],
+            [executable, "-u", script_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -100,6 +109,7 @@ def run_script(script_path, channel, words):
         if process.poll() is None:  # If process is still running, terminate it
             process.terminate()
             print("[INFO] Subprocess terminated.")
+        stop_event.set()  # Signal to stop when the subprocess ends
 
 def main():
     parser = argparse.ArgumentParser(description="Run a script and monitor Keybase for messages.")
@@ -124,7 +134,7 @@ def main():
     threading.Thread(target=run_script, args=(script_path, channel, words), daemon=True).start()
 
     try:
-        while True:
+        while not stop_event.is_set():  # Wait until the stop event is set
             pass
     except KeyboardInterrupt:
         print("\n[INFO] Exiting...")
