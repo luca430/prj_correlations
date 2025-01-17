@@ -48,11 +48,11 @@ def main():
 
         L = len(params)
 
-        # Use Manager for shared objects
+        # Create a shared variables using Manager
         with Manager() as manager:
             N_dict = manager.dict(build_dict())  # Shared dictionary
-            counter = manager.Value('i', 0)
-            lock = manager.Lock()
+            counter = manager.Value('i', 0)  # Shared counter
+            lock = manager.Lock()  # Shared lock
 
             # Parallel processing
             with multiprocessing.Pool(processes=num_cores) as pool:
