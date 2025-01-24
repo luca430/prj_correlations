@@ -8,20 +8,27 @@ from scipy.stats import linregress
 
 def build_dict():
     N_dict = {}
+    for k in [0.0, 1.0, 1.5, 2.5, 5.0]:
+        N_dict[f"K_{k}"] = {}
+        for N in [100, 200, 500, 1000]:
+            N_dict[f"K_{k}"][f"N_{N}"] = {}
+            for i in range(1,26):
+                N_dict[f"K_{k}"][f"N_{N}"][i] = {}
+                N_dict[f"K_{k}"][f"N_{N}"][i]["Fisher"] = {}
+                N_dict[f"K_{k}"][f"N_{N}"][i]["FisherRMT"] = {}
+                N_dict[f"K_{k}"][f"N_{N}"][i]["Naive"] = {}
+                N_dict[f"K_{k}"][f"N_{N}"][i]["NaiveRMT"] = {}
+                for tau in ["tau1.0", "tau1.5", "tau2.0", "tau2.5"]:
+                    N_dict[f"K_{k}"][f"N_{N}"][i]["Fisher"][tau] = {}
+                    N_dict[f"K_{k}"][f"N_{N}"][i]["FisherRMT"][tau] = {}
+                for p in ["p0.1", "p0.15", "p0.2", "p0.25"]:
+                    N_dict[f"K_{k}"][f"N_{N}"][i]["Naive"][p] = {}
+                    N_dict[f"K_{k}"][f"N_{N}"][i]["NaiveRMT"][p] = {}
+    N_dict["original"] = {}
     for N in [100, 200, 500, 1000]:
-        N_dict[f"N_{N}"] = {}
-        for i in range(1,26):
-            N_dict[f"N_{N}"][i] = {}
-            N_dict[f"N_{N}"][i]["Fisher"] = {}
-            N_dict[f"N_{N}"][i]["FisherRMT"] = {}
-            N_dict[f"N_{N}"][i]["Naive"] = {}
-            N_dict[f"N_{N}"][i]["NaiveRMT"] = {}
-            for tau in ["tau1.0", "tau1.5", "tau2.0", "tau2.5"]:
-                N_dict[f"N_{N}"][i]["Fisher"][tau] = {}
-                N_dict[f"N_{N}"][i]["FisherRMT"][tau] = {}
-            for p in ["p0.1", "p0.15", "p0.2", "p0.25"]:
-                N_dict[f"N_{N}"][i]["Naive"][p] = {}
-                N_dict[f"N_{N}"][i]["NaiveRMT"][p] = {}
+        N_dict["original"][f"N_{N}"] = {}
+        for i in range(1, 26):
+            N_dict["original"][f"N_{N}"][i] = {}
 
     return N_dict
 
@@ -122,13 +129,15 @@ def avg_shortest_path(g):
     return np.sum(distances)/(n*(n - 1))
         
 
-def compute_global_variables(obj, glob_dict, load=False):
+def compute_global_variables(obj, load=False):
 
     if not load:
         g = gt.Graph()
         g.add_edge_list(obj)
     else:
         g = gt.load_graph(obj, fmt='gml')
+
+    glob_dict = {}
     
     #Mean degree
     degree_sequence = g.get_out_degrees(g.get_vertices())
