@@ -68,16 +68,16 @@ def ts_generator(params, counter, lock, L):
         os.makedirs(out_folder1, exist_ok=True)
         os.makedirs(out_folder2, exist_ok=True)
         t_vals, x_vals = rk.runge_kutta(LIF, u0, T, A=A, k=k, state=state)
-        spike_trains = [spike_train(ts) for ts in x_vals.T]
+        spike_trains = np.array([spike_train(ts) for ts in x_vals.T])
 
         # Save the results
-        file_path_out1 = os.path.join(out_folder1, "LIF_{}_{}.csv.gz".format(n, i))
-        with gzip.open(file_path_out1, "wt") as f:
+        file_path_out = os.path.join(out_folder1, "LIF_{}_{}.csv.gz".format(n, i))
+        with gzip.open(file_path_out, "wt") as f:
             np.savetxt(f, x_vals, delimiter=",")
 
-        file_path_out2 = os.path.join(out_folder2, "LIF_{}_{}.npz".format(n, i))
-        sparse_matrix = csr_matrix(spike_trains)
-        save_npz(file_path_out2, sparse_matrix)
+        file_path_out = os.path.join(out_folder2, "LIF_{}_{}.csv.gz".format(n, i))
+        with gzip.open(file_path_out, "wt") as f:
+            np.savetxt(f, spike_trains.T, delimiter=",")
 
 def main():
     input_folder = "./graphs"
