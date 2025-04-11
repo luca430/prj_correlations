@@ -27,7 +27,7 @@ def ts_generator(params, counter, lock, L):
 
 def main():
     input_folder = "./graphs"
-    output_folder = "/mnt/time_series/white_noise"
+    output_folder = "../data/time_series/white_noise"
     os.makedirs(output_folder, exist_ok=True)
 
     num_cores = int(os.getenv("NUM_CORES", 8))  # Number of cores used. Default is 8
